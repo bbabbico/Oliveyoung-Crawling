@@ -16,24 +16,21 @@ import pymysql
 # MySQL 연결
 ssql =pymysql.connect(
     host='localhost',
-    user='root',
-    password='ehgus2003',
+    user='newuser',
+    password='(ehgus2003)',
     db='soloDB',
     charset='utf8')
 
 path = ssql.cursor()
 
-
-
-
-
+#infor(text) 에서 수정한 정보를 최종적으로 SQL에 INSERT
 def insert():
 
     res = infor.get(1.0,END)
 
     #infor에서 받은 문자열 respomse에 SQL문 작성을 위해 리스트로 정렬하여 삽입
     res =res.split('\n')
-    response = []
+    response = [url]
 
     for i in range(len(res)):
         temp = res[i].split(':',1)
@@ -43,8 +40,8 @@ def insert():
     #SQL로 INSERT문 보내기
     global SQL확인
     try:
-        path.execute(f"insert into qqq values('{response[0]}','{response[1]}','{response[2]}','{response[3]}','{response[4]}');")
-        ssql.commit()
+        path.execute(f"insert into qqq values('{response[0]}','{response[1]}','{response[2]}','{response[3]}','{response[4]}','{response[5]}');")
+        ssql.commit()  #보낸 SQL 요소 (url , img , name , brand , type , ingredient)
     except Exception as error:
         SQL확인.config(text='오류발생 : '+error)
 
@@ -53,17 +50,19 @@ def insert():
 
 def form():
     '''
+    url : String . 사이트 URL
     img : String (src). 대표 이미지
     name : String. 상품 이름
     brand : String. 브랜드 이름
     type : String. 화장품 타입
-    ingredients : String. 전성분 (모든 성분을 하나의 문자열로 저장)
+    ingredient : String. 전성분 (모든 성분을 하나의 문자열로 저장)
     '''
+    global url
     global img
     global name
     global brand
     global type
-    global ingredients
+    global ingredient
 
     #infor 초기화
     infor.delete("1.0", END)
@@ -102,14 +101,14 @@ def form():
     # 동적 크롤링 (전성분)
     driver.find_element(By.XPATH,'//a[@class="goods_buyinfo"]').click()
     time.sleep(2)
-    ingredients = (driver.find_element(By.CSS_SELECTOR,'#artcInfo .detail_info_list:nth-child(8) dd')).text
+    ingredient = (driver.find_element(By.CSS_SELECTOR,'#artcInfo .detail_info_list:nth-child(8) dd')).text
 
     #GUI infor에 화장품 정보 입력
     infor.insert(1.0,'상품사진주소 :'+img+'\n'
         +'품명 :'+name+'\n'
         +'제작회사 :'+brand+'\n'
         +'종류 :'+type+'\n'
-        +'전성분 :'+ingredients)
+        +'전성분 :'+ingredient)
 
 def check():
     num =[]
@@ -133,18 +132,26 @@ def check():
     num = ','.join(num)
     return num
 
+def link_reset():
+    inputs_link.delete(0,END)
 
 # GUI 셋팅
 win = Tk()  # tkinter 객체 생성
-win.geometry("700x700")  # 화면 크기 설정
+win.geometry("700x500")  # 화면 크기 설정
 win.title("정보 추출기")  # 화면 이름 설정
 win.resizable(False,False) # 창크기 조절 가능여부 상하,좌우
 
 frame1=Frame(win, relief="solid", bd=2)
 frame1.pack()
 
-frame2=Frame(win, relief="solid", bd=2)
+frame2=Frame(win, relief="solid")
 frame2.pack()
+
+frame2_1=Frame(frame2, relief="solid", bd=1)
+frame2_1.pack(side='left')
+
+frame2_2=Frame(frame2, relief="solid", bd=1)
+frame2_2.pack(side='right')
 
 frame3=Frame(win, relief="solid", bd=2)
 frame3.pack()
@@ -182,20 +189,25 @@ c7.pack(side='left')
 c8.pack(side='left')
 
 # URL 화장품 종류 직접입력후 추출 frame input_text
-Tlqkf=Label(frame2,text="추출할 올리브영 상품 페이지링크 입력")
+Tlqkf=Label(frame2_1,text="추출할 올리브영 상품 페이지링크 입력")
 Tlqkf.pack(side='top')
 
-inputs_link=Entry(frame2,width=23)
-inputs_link.pack(side='top')
+inputs_link=Entry(frame2_1,width=23)
+inputs_link.pack(side='left')
 
-Tlqkf=Label(frame2,text="화장품 종류 직접입력 (체크박스 선택되어 있으면 그뒤에 추가됨)")
+button1 = Button(frame2_1,overrelief="solid",command=link_reset,text="링크초기화") #사이트 링크 Entry 초기화
+button1.pack(side='left')
+
+Tlqkf=Label(frame2_2,text="화장품 종류 직접입력 (체크박스 선택되어 있으면 그뒤에 추가됨)")
 Tlqkf.pack(side='top')
 
-inputs_type=Entry(frame2,width=23)
+inputs_type=Entry(frame2_2,width=23)
 inputs_type.pack(side='left')
 
-button = Button(frame2,overrelief="solid",command=form,text="정보추출") #정보 추출
+button = Button(frame2_2,overrelief="solid",command=form,text="정보추출") #정보 추출
 button.pack(side='left')
+
+#################
 
 infor=Text(frame3,width=70,height=16)
 infor.pack(side='top')
